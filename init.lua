@@ -768,6 +768,7 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        sql = { 'sqlfluff' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -835,7 +836,7 @@ require('lazy').setup({
         -- <c-k>: Toggle signature help
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
+        preset = 'super-tab',
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
@@ -855,8 +856,12 @@ require('lazy').setup({
 
       sources = {
         default = { 'lsp', 'path', 'snippets', 'lazydev' },
+        per_filetype = {
+          sql = { 'dadbod', 'buffer' },
+        },
         providers = {
           lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
+          dadbod = { name = 'Dadbod', module = 'vim_dadbod_completion.blink' },
         },
       },
 
@@ -876,25 +881,46 @@ require('lazy').setup({
     },
   },
 
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+  { -- Dark theme
     'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
+    priority = 1000,
     config = function()
-      ---@diagnostic disable-next-line: missing-fields
       require('tokyonight').setup {
         styles = {
-          comments = { italic = false }, -- Disable italics in comments
+          comments = { italic = false },
         },
       }
+    end,
+  },
 
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+  { -- Light theme
+    'catppuccin/nvim',
+    name = 'catppuccin',
+    priority = 1000,
+    config = function()
+      require('catppuccin').setup {
+        flavour = 'latte',
+        transparent_background = true,
+      }
+    end,
+  },
+
+  { -- Auto-swap based on system light/dark mode (GNOME/Zorin)
+    'f-person/auto-dark-mode.nvim',
+    priority = 900, -- after both themes are registered
+    dependencies = { 'folke/tokyonight.nvim', 'catppuccin/nvim' },
+    config = function()
+      require('auto-dark-mode').setup {
+        update_interval = 1000,
+        set_dark_mode = function()
+          vim.o.background = 'dark'
+          vim.cmd.colorscheme 'tokyonight-night'
+        end,
+        set_light_mode = function()
+          vim.o.background = 'light'
+          vim.cmd.colorscheme 'catppuccin-latte'
+        end,
+      }
     end,
   },
 
@@ -940,11 +966,12 @@ require('lazy').setup({
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    branch = 'master',
     build = ':TSUpdate',
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'css', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -973,12 +1000,13 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
+  require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.dadbod',
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
